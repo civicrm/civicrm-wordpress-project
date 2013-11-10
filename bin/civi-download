@@ -1,0 +1,88 @@
+#!/bin/bash
+
+## Download Drupal, CiviCRM, dependencies, and useful development tools.
+## Setup basic symlinks.
+##
+## Maybe, when drush or composer is more mature, we can eliminate this.
+
+BINDIR=$(dirname $0)
+case "$BINDIR" in
+  .*)
+    BINDIR="$PWD/$BINDIR"
+    ;;
+esac
+
+PRJDIR=$(dirname "$BINDIR")
+WEBDIR="$PRJDIR/web"
+TMPDIR="$PRJDIR/app/tmp"
+CIVIXVER=13.10.0
+CIVIXURL="http://downloads.sourceforge.net/project/civix/civix-${CIVIXVER}.tar.bz2?r=http%3A%2F%2Fsourceforge.net%2Fprojects%2Fcivix%2Ffiles%2F&use_mirror=master"
+
+##################################################
+## Helpers
+
+## download_url <url> <out-file>
+function download_url() {
+  #php -r "echo file_get_contents('$1');" > $2
+  if which wget >> /dev/null ; then
+    wget -O "$2" "$1"
+  elif which curl >> /dev/null ; then
+    curl -o "$2" "$1"
+  else
+    echo "error: failed to locate curl or wget"
+  fi
+}
+
+##################################################
+## Validation
+php=$(which php)
+if [ -z "$php" ]; then
+  echo "Failed to locate PHP-CLI. Please install a PHP runtime and register in the PATH."
+  exit 3
+fi
+
+if [ ! -d "$TMPDIR" ]; then
+  mkdir -p "$TMPDIR"
+fi
+
+##################################################
+## Begin execution
+set -e
+pushd $PRJDIR >> /dev/null
+  ## Download composer
+  if [ -f "$PRJDIR/bin/composer" ]; then
+    echo "[[Composer binary ($PRJDIR/bin/composer) already exists. Skipping.]]"
+  else
+    echo "[[Download composer]]"
+    download_url "https://getcomposer.org/installer" "$TMPDIR/composer-installer"
+    php "$TMPDIR/composer-installer" -- --install-dir="$PRJDIR/bin"
+    mv "$PRJDIR/bin/composer.phar" "$PRJDIR/bin/composer"
+  fi
+
+  ## Download civix
+  ## FIXME: Update civix so that it can be installed via composer as a dependnecy
+  if [ -e "$PRJDIR/bin/civix" -a -d "vendor/civicrm/civix" ]; then
+    echo "[[civix binary ($PRJDIR/bin/civix) already exists. Skipping.]]"
+  else
+    echo "[[Download civix]]"
+    download_url "$CIVIXURL" "$TMPDIR/civix.tar.bz2"
+    mkdir -p vendor/civicrm/civix
+    tar xvj  --strip-components 1 -C vendor/civicrm/civix -f "$TMPDIR/civix.tar.bz2"
+    [ -e "$PRJDIR/bin/civix" ] && rm -f "$PRJDIR/bin/civix"
+    ln -s "$PRJDIR/vendor/civicrm/civix/civix" "$PRJDIR/bin/civix"
+  fi
+
+  ## Download dependencies (via composer)
+  "$PRJDIR/bin/composer" install
+
+  ## Download WordPress, etal (via drush)
+  if [ -d "$WEBDIR" ]; then
+    echo "[[Web directory ($WEBDIR) already exists. Skipping.]]"
+  else
+    echo "[[Download WordPress]]"
+    "$PRJDIR/bin/wp" core download --version=3.7
+    mkdir -p "wp-content/plugins/civicrm"
+    "$PRJDIR/bin/gitify-wp" "wp-content/plugins/civicrm"
+  fi
+
+popd >> /dev/null
