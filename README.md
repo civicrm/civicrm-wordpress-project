@@ -20,7 +20,12 @@ cd civicrm-wordpress-project/bin
 ./civi-wp-startup
 ```
 
-## Installation: *AMP
+The final command will print out URLs and credentials for accessing the
+instance of CiviCRM/WordPress.
+
+## Installation: Apache/nginx
+
+Alternatively, if you have a proper web server, you can use configure it:
 
 ```bash
 git clone https://github.com/civicrm/civicrm-wordpress-project.git -b master
@@ -29,13 +34,15 @@ cd civicrm-wordpress-project/bin/
 ./mk-wp-demo-site http://civiwp.localhost civiwp /absolute/path/to/civicrm-wordpress-project/web
 ```
 
-Now update the Apache/nginx configuration and create a virtual host named
-civiwp.localhost with a DocumentRoot (/absolute/path/to/civicrm-wordpress-project/web).
-Restart.
+(Note: The last command should be adjusted to your local system. It takes the form: "mk-wp-demo-site <demo-site-url> <demo-db-name> <web-root>"
+
+Now update the Apache/nginx configuration and create a matching virtual host (e.g.
+named "civiwp.localhost" with a DocumentRoot "/absolute/path/to/civicrm-wordpress-project/web").
+Restart Apache/nginx.
 
 ## Installation: CLI Tools
 
-The project bundles in several useful command-tools (such as composer,
+The project bundles in several useful command-line tools (such as composer,
 drush/wp-cli, and civix). It will be handy to add these to your PATH:
 
 ```bash
@@ -68,7 +75,7 @@ How to add new WP content
 How to add a new WP plugin
 
  * Edit bin/mk-wp-demo-site
- * Add a statement like "$WPCLI plugin install wordpress-importer --activate"
+ * Add a statement like "$WPCLI plugin install my-plugin-name --activate"
 
 How to modify default users, roles, etc
 
