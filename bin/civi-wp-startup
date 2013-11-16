@@ -1,0 +1,19 @@
+#!/bin/bash
+
+## Reset the database and launch php's built-in web-server
+
+## Determine the absolute path of the directory with the file
+## absdirname <file-path>
+function absdirname() {
+  pushd $(dirname $0) >> /dev/null
+    pwd
+  popd >> /dev/null
+}
+
+BINDIR=$(absdirname "$0")
+PRJDIR=$(dirname "$BINDIR")
+WEBDIR="$PRJDIR/web"
+TMPDIR="$PRJDIR/app/tmp"
+
+"$BINDIR/mk-wp-demo-site" http://localhost:8181 civiwp "$WEBDIR"
+php -S localhost:8181 -t "$WEBDIR" "$PRJDIR/src/wp-router.php"
