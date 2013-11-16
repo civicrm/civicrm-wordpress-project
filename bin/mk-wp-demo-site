@@ -261,3 +261,12 @@ pushd "$WEB_ROOT"
 
   $WPCLI user create demo demo@example.com --role=civicrm_admin --user_pass=demo 
 popd
+
+set +x
+echo "========================================"
+echo "SUMMARY:"
+echo "  SITE_URL: $SITE_URL"
+echo "  DB_NAME: $DB_NAME"
+echo "  WEB_ROOT: $WEB_ROOT"
+echo "  ADMIN_USER: $ADMIN_USER"
+echo "  ADMIN_PASS: $ADMIN_PASS"
