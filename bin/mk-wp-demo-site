@@ -97,7 +97,7 @@ pushd "$WEB_ROOT"
   $WPCLI post delete 1
   $WPCLI post delete 2
   $WPCLI rewrite structure '/%postname%/'
-  $WPCLI rewrite flush
+  $WPCLI rewrite flush --hard
   $WPCLI plugin install wordpress-importer --activate
   $WPCLI import ../app/config/civicrm-wordpress.xml --authors=create
   $WPCLI search-replace 'http://civicrm-wordpress.ex' "$SITE_URL"

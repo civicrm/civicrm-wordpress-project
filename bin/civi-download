@@ -90,6 +90,10 @@ pushd $PRJDIR >> /dev/null
     popd >> /dev/null
   fi
 
+  if [ ! -e "$WEBDIR/wp-cli.yml" ]; then
+    ln -s "$PRJDIR/app/config/wp-cli.yml" "$WEBDIR/wp-cli.yml"
+  fi
+
   ## Download CiviCRM, etal (via git)
   if [ -d "$WEBDIR/wp-content/plugins/civicrm" ]; then
     echo "[[CiviCRM directory ($WEBDIR/wp-content/plugins/civicrm). Skipping.]]"
