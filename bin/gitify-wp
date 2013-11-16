@@ -97,7 +97,7 @@ function do_gencode() {
   pushd "$1/xml" > /dev/null
     if [ -f "GenCode.php" ]; then
       echo "[[Generate files]]"
-      php GenCode.php
+      php GenCode.php schema/Schema.xml '' wordpress
     else
       echo "[[Skip \"Generate files\"]]"
     fi
@@ -138,6 +138,7 @@ CIVICRM_ROOT=""
 CIVICRM_L10N=""
 CIVICRM_GIT_HOOKS=""
 CIVICRM_BRANCH="master"
+RUN_GENCODE=1
 FORK_GIT_BASE_URL=""
 UPSTREAM_GIT_BASE_URL="https://github.com/civicrm"
 
@@ -146,12 +147,17 @@ while [ -n "$1" ]; do
     CIVICRM_L10N="$1"
   elif [ "$1" == "--hooks" ]; then
     CIVICRM_GIT_HOOKS="$1"
+  elif [ "$1" == "--no-gencode" ]; then
+    RUN_GENCODE=
   elif [ "$1" == "--upstream" ]; then
     shift
     UPSTREAM_GIT_BASE_URL="$1"
   elif [ "$1" == "--fork" ]; then
     shift
     FORK_GIT_BASE_URL="$1"
+  elif [ "$1" == "--branch" ]; then
+    shift
+    CIVICRM_BRANCH="$1"
   elif [ -z "$CIVICRM_ROOT" ]; then
     ## Third arg
     CIVICRM_ROOT="$1"
@@ -164,11 +170,13 @@ done
 
 if [ -z "$CIVICRM_ROOT" -o ! -d "$CIVICRM_ROOT" -o -z "$UPSTREAM_GIT_BASE_URL" ]; then
   echo "Convert a directory into a set of CiviCRM git clones"
-  echo "usage: $0 <existing-civicrm-root> [--fork <base-url>] [--upstream <base-url>] [--l10n] [--hooks]"
+  echo "usage: $0 <existing-civicrm-root> [--fork <base-url>] [--upstream <base-url>] [--l10n] [--hooks] [--branch <branch>]"
   echo "  <existing-civicrm-root>: the main directory containing CiviCRM"
   echo "  --upstream <base-url>: specify the base URL for upstream repositories"
   echo "  --fork <base-url>: specify the base URL for your personal fork repositories"
+  echo "  --branch <branch>: specify the branch to checkout (eg 'master', '4.4', '4.3')"
   echo "  --l10n: optionally fetch localization data; currently requires svn"
+  echo "  --no-gencode: skip execution of GenCode"
   echo "  --hooks: optionally install recommended git hooks; the hooks are mostly"
   echo "           tested with git CLI under Linux and OSX; they haven't been"
   echo "           tested with git GUIs or Windows"
@@ -196,4 +204,6 @@ if [ "$CIVICRM_L10N" == "--l10n" ]; then
   do_svnify "http://svn.civicrm.org/l10n/trunk" "$CIVICRM_ROOT/l10n"
 fi
 
-do_gencode "$CIVICRM_ROOT/civicrm"
+if [ -n "$RUN_GENCODE" ]; then
+  do_gencode "$CIVICRM_ROOT/civicrm"
+fi
