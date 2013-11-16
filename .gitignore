@@ -13,3 +13,4 @@ bin/wp
 bin/wp.bat
 web/
 *~
+.idea
