@@ -1,0 +1,31 @@
+#!/bin/bash
+
+## Run "git pull --ff-only" on all the clean git repositories
+
+## Determine the absolute path of the directory with the file
+## absdirname <file-path>
+function absdirname() {
+  pushd $(dirname $0) >> /dev/null
+    pwd
+  popd >> /dev/null
+}
+
+BINDIR=$(absdirname "$0")
+PRJDIR=$(dirname "$BINDIR")
+WEBDIR="$PRJDIR/web"
+
+set -e
+find "$WEBDIR/wp-content/plugins/civicrm" -type d -name .git | while read gitdir ; do
+  pushd "$gitdir/../" >> /dev/null
+    if git status | grep -q 'nothing to commit (working directory clean)' ; then 
+      git pull --ff-only origin $(git rev-parse --abbrev-ref HEAD)
+    else
+      echo "[[Git repo ($gitdir) is dirty. Exiting.]]"
+      exit 1
+    fi
+  popd >> /dev/null
+done
+
+#      if git remote | grep ^upstream$ -q ; then
+#        git pull --ff-only upstream $(git rev-parse --abbrev-ref HEAD)
+#      else
