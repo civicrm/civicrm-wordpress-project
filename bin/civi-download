@@ -5,13 +5,15 @@
 ##
 ## Maybe, when drush or composer is more mature, we can eliminate this.
 
-BINDIR=$(dirname $0)
-case "$BINDIR" in
-  .*)
-    BINDIR="$PWD/$BINDIR"
-    ;;
-esac
+## Determine the absolute path of the directory with the file
+## absdirname <file-path>
+function absdirname() {
+  pushd $(dirname $0) >> /dev/null
+    pwd
+  popd >> /dev/null
+}
 
+BINDIR=$(absdirname "$0")
 PRJDIR=$(dirname "$BINDIR")
 WEBDIR="$PRJDIR/web"
 TMPDIR="$PRJDIR/app/tmp"
@@ -75,14 +77,21 @@ pushd $PRJDIR >> /dev/null
   ## Download dependencies (via composer)
   "$PRJDIR/bin/composer" install
 
-  ## Download WordPress, etal (via drush)
+  ## Download WordPress (via wp-cli)
   if [ -d "$WEBDIR" ]; then
     echo "[[Web directory ($WEBDIR) already exists. Skipping.]]"
   else
     echo "[[Download WordPress]]"
     "$PRJDIR/bin/wp" core download --version=3.7
-    mkdir -p "wp-content/plugins/civicrm"
-    "$PRJDIR/bin/gitify-wp" "wp-content/plugins/civicrm"
+  fi
+
+  ## Download CiviCRM, etal (via git)
+  if [ -d "$WEBDIR/wp-content/plugins/civicrm" ]; then
+    echo "[[CiviCRM directory ($WEBDIR/wp-content/plugins/civicrm). Skipping.]]"
+  else
+    echo "[[Download CiviCRM]]"
+    mkdir -p "$WEBDIR/wp-content/plugins/civicrm"
+    "$PRJDIR/bin/gitify-wp" "$WEBDIR/wp-content/plugins/civicrm"
   fi
 
 popd >> /dev/null
