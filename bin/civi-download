@@ -4,6 +4,8 @@
 ## Setup basic symlinks.
 ##
 ## Maybe, when drush or composer is more mature, we can eliminate this.
+##
+## usage: civi-download [--fork <base-url>] [--upstream <base-url>] [--l10n] [--branch <branch>]
 
 ## Determine the absolute path of the directory with the file
 ## absdirname <file-path>
@@ -82,7 +84,10 @@ pushd $PRJDIR >> /dev/null
     echo "[[Web directory ($WEBDIR) already exists. Skipping.]]"
   else
     echo "[[Download WordPress]]"
-    "$PRJDIR/bin/wp" core download --version=3.7
+    mkdir "$WEBDIR"
+    pushd "$WEBDIR" >> /dev/null
+      "$PRJDIR/bin/wp" core download --version=3.7
+    popd >> /dev/null
   fi
 
   ## Download CiviCRM, etal (via git)
@@ -91,7 +96,7 @@ pushd $PRJDIR >> /dev/null
   else
     echo "[[Download CiviCRM]]"
     mkdir -p "$WEBDIR/wp-content/plugins/civicrm"
-    "$PRJDIR/bin/gitify-wp" "$WEBDIR/wp-content/plugins/civicrm"
+    "$PRJDIR/bin/gitify-wp" --hooks --no-gencode "$WEBDIR/wp-content/plugins/civicrm" "$@"
   fi
 
 popd >> /dev/null
