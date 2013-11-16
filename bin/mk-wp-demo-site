@@ -79,19 +79,19 @@ pushd "$WEB_ROOT"
     --admin_email="${ADMIN_USER}@example.com" \
     --title="CiviCRM-WordPress Demo"
 
-  ## Allow shell and WWW users to both manipulate "files" directory
-  if which setfacl; then
-    for FACL_USER in $FACL_USERS ; do
-      find "$WEB_ROOT/wp-content/plugins/files" -type d | xargs setfacl -m u:${FACL_USER}:rwx -m d:u:${FACL_USER}:rwx
-    done
-  fi
-
   ## Create WP-CiviCRM dirs and config
   for SUBDIR in modules files files/civicrm files/civicrm/templates_c ; do
     if [ ! -d "wp-content/plugins/${SUBDIR}" ]; then
       mkdir "wp-content/plugins/${SUBDIR}"
     fi
   done
+
+  ## Allow shell and WWW users to both manipulate "files" directory
+  if which setfacl; then
+    for FACL_USER in $FACL_USERS ; do
+      find "$WEB_ROOT/wp-content/plugins/files" -type d | xargs setfacl -m u:${FACL_USER}:rwx -m d:u:${FACL_USER}:rwx
+    done
+  fi
 
   ## Clear out default content. Load real content.
   $WPCLI post delete 1
