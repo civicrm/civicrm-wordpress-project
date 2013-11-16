@@ -101,7 +101,7 @@ pushd "$WEB_ROOT"
   $WPCLI plugin install wordpress-importer --activate
   $WPCLI import ../app/config/civicrm-wordpress.xml --authors=create
   $WPCLI search-replace 'http://civicrm-wordpress.ex' "$SITE_URL"
-  $WPCLI eval-file ../app/config/wp-init.php
+  $WPCLI eval '$home = get_page_by_title("Welcome to CiviCRM with WordPress"); update_option("page_on_front", $home->ID); update_option("show_on_front", "page");'
 popd
 
 ## Create CiviCRM config
