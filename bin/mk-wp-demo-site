@@ -102,31 +102,28 @@ pushd "$WEB_ROOT"
   $WPCLI import ../app/config/civicrm-wordpress.xml --authors=create
   $WPCLI search-replace 'http://civicrm-wordpress.ex' "$SITE_URL"
   $WPCLI eval-file ../app/config/wp-init.php
-
-#  ln -s "$CIVI_ROOT" "sites/$SITE_URL/modules/civicrm"
-
-  cat "$CIVI_ROOT/templates/CRM/common/civicrm.settings.php.template" \
-    | sed "s;%%baseURL%%;${SITE_URL};" \
-    | sed "s;%%cms%%;WordPress;" \
-    | sed "s;%%CMSdbHost%%;${DB_HOST};" \
-    | sed "s;%%CMSdbName%%;${DB_NAME};" \
-    | sed "s;%%CMSdbPass%%;${DB_PASS};" \
-    | sed "s;%%CMSdbUser%%;${DB_USER};" \
-    | sed "s;%%crmRoot%%;${CIVI_ROOT}/;" \
-    | sed "s;%%dbHost%%;${DB_HOST};" \
-    | sed "s;%%dbName%%;${DB_NAME};" \
-    | sed "s;%%dbPass%%;${DB_PASS};" \
-    | sed "s;%%dbUser%%;${DB_USER};" \
-    | sed "s;%%siteKey%%;${SITE_KEY};" \
-    | sed "s;%%templateCompileDir%%;${WEB_ROOT}/wp-content/plugins/files/civicrm/templates_c;" \
-    > "$CIVI_SETTINGS"
-
-  echo  >> "$CIVI_SETTINGS"
-  echo "define('CIVICRM_MAIL_LOG', '/dev/null');" >> "$CIVI_SETTINGS"
-
 popd
 
 ## Create CiviCRM config
+cat "$CIVI_ROOT/templates/CRM/common/civicrm.settings.php.template" \
+  | sed "s;%%baseURL%%;${SITE_URL};" \
+  | sed "s;%%cms%%;WordPress;" \
+  | sed "s;%%CMSdbHost%%;${DB_HOST};" \
+  | sed "s;%%CMSdbName%%;${DB_NAME};" \
+  | sed "s;%%CMSdbPass%%;${DB_PASS};" \
+  | sed "s;%%CMSdbUser%%;${DB_USER};" \
+  | sed "s;%%crmRoot%%;${CIVI_ROOT}/;" \
+  | sed "s;%%dbHost%%;${DB_HOST};" \
+  | sed "s;%%dbName%%;${DB_NAME};" \
+  | sed "s;%%dbPass%%;${DB_PASS};" \
+  | sed "s;%%dbUser%%;${DB_USER};" \
+  | sed "s;%%siteKey%%;${SITE_KEY};" \
+  | sed "s;%%templateCompileDir%%;${WEB_ROOT}/wp-content/plugins/files/civicrm/templates_c;" \
+  > "$CIVI_SETTINGS"
+
+echo  >> "$CIVI_SETTINGS"
+echo "define('CIVICRM_MAIL_LOG', '/dev/null');" >> "$CIVI_SETTINGS"
+
 cat > "$CIVI_ROOT/bin/setup.conf" << EOF
   SVNROOT="$CIVI_ROOT"
   CIVISOURCEDIR="$CIVI_ROOT"
@@ -177,8 +174,90 @@ popd
 
 pushd "$WEB_ROOT"
   $WPCLI plugin activate civicrm
-  #drush -l "${SITE_URL}" -y pm-enable civicrm
-  #drush -l "${SITE_URL}" -y pm-enable civicrm_webtest
-  #drush -l "${SITE_URL}" -y user-create --password=demo --mail='demo@example.com' demo
-  #drush -l "${SITE_URL}" -y user-add-role civicrm_webtest_user demo
+
+  $WPCLI role create civicrm_admin 'CiviCRM Administrator'
+  $WPCLI cap add civicrm_admin \
+    read \
+    level_0
+  $WPCLI cap add civicrm_admin \
+    access_ajax_api \
+    access_all_cases_and_activities \
+    access_all_custom_data \
+    access_civicontribute \
+    access_civicrm \
+    access_civievent \
+    access_civigrant \
+    access_civimail \
+    access_civimail_subscribe_unsubscribe_pages \
+    access_civimember \
+    access_civipledge \
+    access_civireport \
+    access_contact_dashboard \
+    access_contact_reference_fields \
+    access_deleted_contacts \
+    access_my_cases_and_activities \
+    access_report_criteria \
+    access_uploaded_files \
+    add_cases \
+    add_contacts \
+    administer_civicampaign \
+    administer_civicase \
+    administer_civicrm \
+    administer_dedupe_rules \
+    administer_reports \
+    administer_reserved_groups \
+    administer_reserved_reports \
+    administer_reserved_tags \
+    administer_tagsets \
+    create_manual_batch \
+    delete_activities \
+    delete_all_manual_batches \
+    delete_contacts \
+    delete_in_civicase \
+    delete_in_civicontribute \
+    delete_in_civievent \
+    delete_in_civigrant \
+    delete_in_civimail \
+    delete_in_civimember \
+    delete_in_civipledge \
+    delete_own_manual_batches \
+    edit_all_contacts \
+    edit_all_events \
+    edit_all_manual_batches \
+    edit_contributions \
+    edit_event_participants \
+    edit_grants \
+    edit_groups \
+    edit_memberships \
+    edit_own_manual_batches \
+    edit_pledges \
+    export_all_manual_batches \
+    export_own_manual_batches \
+    gotv_campaign_contacts \
+    import_contacts \
+    interview_campaign_contacts \
+    make_online_contributions \
+    manage_campaign \
+    merge_duplicate_contacts \
+    profile_create \
+    profile_edit \
+    profile_listings \
+    profile_listings_and_forms \
+    profile_view \
+    register_for_events \
+    release_campaign_contacts \
+    reserve_campaign_contacts \
+    sign_civicrm_petition \
+    translate_civicrm \
+    view_all_activities \
+    view_all_contacts \
+    view_all_manual_batches \
+    view_all_notes \
+    view_debug_output \
+    view_event_info \
+    view_event_participants \
+    view_own_manual_batches \
+    view_public_civimail_content
+
+  $WPCLI user create demo demo@example.com --role=civicrm_admin --user_pass=demo 
 popd
