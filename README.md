@@ -57,30 +57,38 @@ simply skip this step.
 
 ## Likely Questions
 
-Should I use this to run my real websites?
+#### Should I use this to run my real websites?
 
  * Probably not. It's still likely to change significantly.
 
-How to fork
+#### How to fork
 
  * TODO
 
-How to add new WP content
+#### How to upgrade to newer WP
+
+ * Edit "bin/civi-download", changing the statement with "$WPCLI core download --version=XXX"
+ * Destroy and recreate the demo site
+   * Delete the "web" directory
+   * Re-run "civi-download"
+   * Re-run "mk-wp-demo-site" or "civi-wp-startup"
+
+#### How to add new WP content
 
  * Generate content through web UI
  * Run "wp export" and update app/config/civicrm-wordpress.xml
  * Edit app/config/civicrm-wordpress.xml and ensure that all URLs reference
     "http://civicrm-wordpress.ex" instead of your localhost.
 
-How to add a new WP plugin
+#### How to add a new WP plugin
 
  * Edit bin/mk-wp-demo-site
  * Add a statement like "$WPCLI plugin install my-plugin-name --activate"
 
-How to modify default users, roles, etc
+#### How to modify default users, roles, etc
 
  * Edit bin/mk-wp-demo-site.sh
 
-How to add a new CiviCRM extension
+#### How to add a new CiviCRM extension
 
  * TODO
