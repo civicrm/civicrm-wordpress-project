@@ -25,7 +25,7 @@ instance of CiviCRM/WordPress.
 
 ## Installation: Apache/nginx
 
-Alternatively, if you have a proper web server, you can use configure it:
+Alternatively, if you have a proper web server, you can use it:
 
 ```bash
 git clone https://github.com/civicrm/civicrm-wordpress-project.git -b master
@@ -34,7 +34,7 @@ cd civicrm-wordpress-project/bin/
 ./mk-wp-demo-site http://civiwp.localhost civiwp /absolute/path/to/civicrm-wordpress-project/web
 ```
 
-(Note: The last command should be adjusted to your local system. It takes the form: "mk-wp-demo-site <demo-site-url> <demo-db-name> <web-root>"
+(Note: The last command should be adjusted to your local system. It takes the form: "mk-wp-demo-site [demo-site-url] [demo-db-name] [web-root]"
 
 Now update the Apache/nginx configuration and create a matching virtual host (e.g.
 named "civiwp.localhost" with a DocumentRoot "/absolute/path/to/civicrm-wordpress-project/web").
