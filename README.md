@@ -31,10 +31,10 @@ Alternatively, if you have a proper web server, you can use it:
 git clone https://github.com/civicrm/civicrm-wordpress-project.git -b master
 cd civicrm-wordpress-project/bin/
 ./civi-download --branch 4.4
-./mk-wp-demo-site http://civiwp.localhost civiwp /absolute/path/to/civicrm-wordpress-project/web
+./civi-install wp-demo http://civiwp.localhost civiwp
 ```
 
-(Note: The last command should be adjusted to your local system. It takes the form: "mk-wp-demo-site [demo-site-url] [demo-db-name] [web-root]"
+(Note: The last command should be adjusted to your local system. It takes the form: "civi-install wp-demo [demo-site-url] [demo-db-name]"
 
 Now update the Apache/nginx configuration and create a matching virtual host (e.g.
 named "civiwp.localhost" with a DocumentRoot "/absolute/path/to/civicrm-wordpress-project/web").
@@ -67,11 +67,11 @@ simply skip this step.
 
 #### How to upgrade to newer WP
 
- * Edit "bin/civi-download", changing the statement with "$WPCLI core download --version=XXX"
+ * Edit "bin/civi-download", changing the statement with "wp core download --version=XXX"
  * Destroy and recreate the demo site
    * Delete the "web" directory
    * Re-run "civi-download"
-   * Re-run "mk-wp-demo-site" or "civi-wp-startup"
+   * Re-run "civi-install" or "civi-wp-startup"
 
 #### How to add new WP content
 
@@ -82,12 +82,12 @@ simply skip this step.
 
 #### How to add a new WP plugin
 
- * Edit bin/mk-wp-demo-site
- * Add a statement like "$WPCLI plugin install my-plugin-name --activate"
+ * Edit app/config/install-wp-demo.sh
+ * Add a statement like "wp plugin install wordpress-importer --activate"
 
 #### How to modify default users, roles, etc
 
- * Edit bin/mk-wp-demo-site.sh
+ * Edit app/config/install-wp-demo.sh
 
 #### How to add a new CiviCRM extension
 

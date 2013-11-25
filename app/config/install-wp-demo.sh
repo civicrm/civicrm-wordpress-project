@@ -17,22 +17,22 @@ civicrm_install
 ## Apply demo site customizations
 pushd "$WEB_ROOT" >> /dev/null
   ## Clear out default content. Load real content.
-  $WPCLI post delete 1
-  $WPCLI post delete 2
-  $WPCLI rewrite structure '/%postname%/'
-  $WPCLI rewrite flush --hard
-  $WPCLI plugin install wordpress-importer --activate
-  $WPCLI import ../app/config/civicrm-wordpress.xml --authors=create
-  $WPCLI search-replace 'http://civicrm-wordpress.ex' "$SITE_URL"
-  $WPCLI eval '$home = get_page_by_title("Welcome to CiviCRM with WordPress"); update_option("page_on_front", $home->ID); update_option("show_on_front", "page");'
+  wp post delete 1
+  wp post delete 2
+  wp rewrite structure '/%postname%/'
+  wp rewrite flush --hard
+  wp plugin install wordpress-importer --activate
+  wp import ../app/config/civicrm-wordpress.xml --authors=create
+  wp search-replace 'http://civicrm-wordpress.ex' "$SITE_URL"
+  wp eval '$home = get_page_by_title("Welcome to CiviCRM with WordPress"); update_option("page_on_front", $home->ID); update_option("show_on_front", "page");'
 
-  $WPCLI plugin activate civicrm
+  wp plugin activate civicrm
 
-  $WPCLI role create civicrm_admin 'CiviCRM Administrator'
-  $WPCLI cap add civicrm_admin \
+  wp role create civicrm_admin 'CiviCRM Administrator'
+  wp cap add civicrm_admin \
     read \
     level_0
-  $WPCLI cap add civicrm_admin \
+  wp cap add civicrm_admin \
     access_ajax_api \
     access_all_cases_and_activities \
     access_all_custom_data \
@@ -112,5 +112,5 @@ pushd "$WEB_ROOT" >> /dev/null
     view_own_manual_batches \
     view_public_civimail_content
 
-  $WPCLI user create "$DEMO_USER" "$DEMO_EMAIL" --role=civicrm_admin --user_pass="$DEMO_PASS"
+  wp user create "$DEMO_USER" "$DEMO_EMAIL" --role=civicrm_admin --user_pass="$DEMO_PASS"
 popd >> /dev/null

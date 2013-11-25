@@ -3,13 +3,11 @@ set -e
 
 ## Setup a WordPress site with CiviCRM configured for demonstration.
 ## If a site already exists, destroy and recreate it.
-## Usage: civi-install <domain.name> <db_name>
 
 ## Pre-requisites:
 ## - MySQL admin credentials in ~/.my.cnf
 ## - httpd with proper vhost, etc (eg Apache vhost with mod_rewrite)
 ## - DNS or /etc/hosts entries for "url"
-## - wp-cli
 ## - (recommended) filesystem with "acl" support
 
 ###############################################################################
@@ -28,6 +26,9 @@ PRJDIR=$(dirname "$BINDIR")
 WEBDIR="$PRJDIR/web"
 TMPDIR="$PRJDIR/app/tmp"
 source "$PRJDIR/src/civilib.sh"
+
+## Make sure bundled utilities are available, regardless of local config
+export PATH="$BINDIR:$PATH"
 
 ###############################################################################
 function usage() {
@@ -72,7 +73,6 @@ CIVI_TEMPLATEC="${CIVI_FILES}/templates_c"
 CIVI_UF="WordPress"
 FACL_USERS="www-data $(whoami)"
 
-WPCLI="$PRJDIR/bin/wp"
 MYSQLCLI="mysql"
 
 SITE_KEY=$(cvutil_makepasswd 16)

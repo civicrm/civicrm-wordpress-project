@@ -181,7 +181,7 @@ function wp_install() {
 
   pushd "$WEB_ROOT" >> /dev/null
     [ -f "wp-config.php" ] && rm -f "wp-config.php"
-    $WPCLI core config \
+    wp core config \
       --dbname="$DB_NAME" \
       --dbuser="$DB_USER" \
       --dbpass="$DB_PASS" \
@@ -198,7 +198,7 @@ function wp_install() {
         define('NONCE_SALT',       '$(cvutil_makepasswd 32)');
 PHP
 
-    $WPCLI core install \
+    wp core install \
       --url="$SITE_URL" \
       --admin_user="$ADMIN_USER" \
       --admin_password="$ADMIN_PASS" \
