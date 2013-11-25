@@ -16,5 +16,5 @@ PRJDIR=$(dirname "$BINDIR")
 WEBDIR="$PRJDIR/web"
 TMPDIR="$PRJDIR/app/tmp"
 
-"$BINDIR/mk-wp-demo-site" http://localhost:8181 civiwp
+"$BINDIR/mk-wp-demo-site" wp-demo http://localhost:8181 civiwp
 php -S localhost:8181 -t "$WEBDIR" "$PRJDIR/src/wp-router.php"
