@@ -3,7 +3,7 @@ set -e
 
 ## Setup a WordPress site with CiviCRM configured for demonstration.
 ## If a site already exists, destroy and recreate it.
-## Usage: mk-wp-demo-site <domain.name> <db_name>
+## Usage: civi-install <domain.name> <db_name>
 
 ## Pre-requisites:
 ## - MySQL admin credentials in ~/.my.cnf
@@ -32,7 +32,7 @@ source "$PRJDIR/src/civilib.sh"
 ###############################################################################
 function usage() {
   cat <<EOT
-Usage: mk-wp-demo-site SITE_TYPE SITE_URL DB_NAME
+Usage: civi-install SITE_TYPE SITE_URL DB_NAME
 Re/creates a WP-based CiviCRM site.
 
   * SITE_TYPE: eg "drupal-demo", "wp-hrdemo"
