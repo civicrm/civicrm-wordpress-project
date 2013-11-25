@@ -41,7 +41,7 @@ function cvutil_summary() {
   cvutil_assertvars "$@"
   for var in "$@" ; do
     eval "val=\$$var"
-    echo " - $var: \"$val\""
+    echo " - $var: $val"
   done
 }
 
@@ -218,5 +218,38 @@ PHP
         find "$WEB_ROOT/wp-content/plugins/files" -type d | xargs setfacl -m u:${FACL_USER}:rwx -m d:u:${FACL_USER}:rwx
       done
     fi
+  popd >> /dev/null
+}
+
+###############################################################################
+## Generate config files and setup database
+function drupal_install() {
+  cvutil_assertvars drupal_install WEB_ROOT SITE_TITLE SITE_DIR DB_USER DB_PASS DB_HOST DB_NAME ADMIN_USER ADMIN_PASS
+
+  pushd "$WEB_ROOT" >> /dev/null
+    [ -f "sites/$SITE_DIR/settings.php" ] && rm -f "sites/$SITE_DIR/settings.php"
+
+    drush site-install -y \
+      --db-url="mysql://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}" \
+      --account-name="$ADMIN_USER" \
+      --account-pass="$ADMIN_PASS" \
+      --account-mail="$ADMIN_EMAIL" \
+      --site-name="$SITE_TITLE" \
+      --sites-subdir="$SITE_DIR"
+    chmod u+w "sites/$SITE_DIR"
+
+    ## Allow shell and WWW users to both manipulate "files" directory
+    if which setfacl; then
+      for FACL_USER in $FACL_USERS ; do
+        find "$DRUPAL_ROOT/sites/${SITE_DIR}/files" -type d | xargs setfacl -m u:${FACL_USER}:rwx -m d:u:${FACL_USER}:rwx
+      done
+    fi
+
+    ## Create Drupal-CiviCRM dirs and config
+    for SUBDIR in modules files ; do
+      if [ ! -d "sites/${SITE_DIR}/${SUBDIR}" ]; then
+        mkdir "sites/${SITE_DIR}/${SUBDIR}"
+      fi
+    done
   popd >> /dev/null
 }
