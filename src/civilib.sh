@@ -98,11 +98,11 @@ function civicrm_install() {
 ###############################################################################
 ## Generate a "civicrm.settings.php" file
 function civicrm_make_settings_php() {
-  cvutil_assertvars civicrm_make_settings_php CIVI_SETTINGS CIVI_ROOT CIVI_TEMPLATEC SITE_URL DB_HOST DB_NAME DB_PASS DB_USER DB_HOST DB_NAME DB_PASS DB_USER SITE_KEY
+  cvutil_assertvars civicrm_make_settings_php CIVI_SETTINGS CIVI_ROOT CIVI_UF CIVI_TEMPLATEC SITE_URL DB_HOST DB_NAME DB_PASS DB_USER DB_HOST DB_NAME DB_PASS DB_USER SITE_KEY
 
   cat "$CIVI_ROOT/templates/CRM/common/civicrm.settings.php.template" \
     | sed "s;%%baseURL%%;${SITE_URL};" \
-    | sed "s;%%cms%%;WordPress;" \
+    | sed "s;%%cms%%;${CIVI_UF};" \
     | sed "s;%%CMSdbHost%%;${DB_HOST};" \
     | sed "s;%%CMSdbName%%;${DB_NAME};" \
     | sed "s;%%CMSdbPass%%;${DB_PASS};" \
@@ -122,7 +122,7 @@ function civicrm_make_settings_php() {
 ###############################################################################
 ## Generate a "setup.conf" file
 function civicrm_make_setup_conf() {
-  cvutil_assertvars civicrm_make_setup_conf CIVI_ROOT DB_NAME DB_USER DB_PASS
+  cvutil_assertvars civicrm_make_setup_conf CIVI_ROOT CIVI_UF DB_NAME DB_USER DB_PASS
 
   cat > "$CIVI_ROOT/bin/setup.conf" << EOF
     SVNROOT="$CIVI_ROOT"
@@ -135,7 +135,7 @@ function civicrm_make_setup_conf() {
     PHP5PATH=
     DBLOAD="$DBLOAD"
     # DBADD=
-    GENCODE_CMS=wordpress
+    GENCODE_CMS="$CIVI_UF"
 EOF
 }
 

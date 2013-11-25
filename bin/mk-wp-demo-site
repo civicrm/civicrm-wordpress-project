@@ -63,13 +63,16 @@ DB_NAME="$2"
 DB_USER="$DB_NAME"
 DB_PASS=$(cvutil_makepasswd 12)
 DB_HOST=localhost
+
 WEB_ROOT="$WEBDIR"
 [ ! -d "$WEB_ROOT" ] && echo "ERROR: $WEB_ROOT: Web root directory not found." && usage
 CIVI_ROOT="$WEB_ROOT/wp-content/plugins/civicrm/civicrm"
 CIVI_SETTINGS="$WEB_ROOT/wp-content/plugins/civicrm/civicrm.settings.php"
 CIVI_FILES="${WEB_ROOT}/wp-content/plugins/files/civicrm"
 CIVI_TEMPLATEC="${CIVI_FILES}/templates_c"
+CIVI_UF="WordPress"
 FACL_USERS="www-data $(whoami)"
+
 WPCLI="$WEB_ROOT/../bin/wp"
 MYSQLCLI="mysql"
 
