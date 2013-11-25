@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 
 ## Setup a WordPress site with CiviCRM configured for demostration.
 ## If a site already exists, destroy and recreate it.
@@ -17,82 +17,85 @@ set -ex
 ## - wp-cli
 ## - (strongly recommended) filesystem with "acl" support
 
+###############################################################################
+## Bootstrap
 
+## Determine the absolute path of the directory with the file
+## usage: absdirname <file-path>
+function absdirname() {
+  pushd $(dirname $0) >> /dev/null
+    pwd
+  popd >> /dev/null
+}
+
+BINDIR=$(absdirname "$0")
+PRJDIR=$(dirname "$BINDIR")
+WEBDIR="$PRJDIR/web"
+TMPDIR="$PRJDIR/app/tmp"
+source "$PRJDIR/src/civilib.sh"
+
+###############################################################################
 function usage() {
   cat <<EOT
-Usage: mk-wp-demo-site SITE_URL DB_NAME WEB_ROOT
+Usage: mk-wp-demo-site SITE_URL DB_NAME
 Re/creates a WP-based CiviCRM site.
 
   * SITE_URL: URL of the site. Example: http://example.org:8080
   * DB_NAME: MySQL database name. Example: civicrm_test
-  * WEB_ROOT: Root path of the WordPress website. Example: /var/www/
 
 EOT
 
   exit 99;
 }
 
-[ "$1" = "--help" ] && usage
-[ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ] && usage
-[ ! -d "$3" ] && echo "ERROR: $3: Web root directory not found." && usage
+###############################################################################
+## Parse arguments and set default environment variables
 
+[ -z "$1" ] && usage
+[ "$1" = "--help" ] && usage
+
+SITE_TITLE="CiviCRM-WordPress Demo"
 SITE_URL="$1"
+[ -z "$SITE_URL" ] && usage
+
 DB_NAME="$2"
+[ -z "$DB_NAME" ] && usage
 DB_USER="$DB_NAME"
-DB_PASS=$(makepasswd --chars=12)
+DB_PASS=$(cvutil_makepasswd 12)
 DB_HOST=localhost
-WEB_ROOT="$3"
+WEB_ROOT="$WEBDIR"
+[ ! -d "$WEB_ROOT" ] && echo "ERROR: $WEB_ROOT: Web root directory not found." && usage
 CIVI_ROOT="$WEB_ROOT/wp-content/plugins/civicrm/civicrm"
 CIVI_SETTINGS="$WEB_ROOT/wp-content/plugins/civicrm/civicrm.settings.php"
+CIVI_FILES="${WEB_ROOT}/wp-content/plugins/files/civicrm"
+CIVI_TEMPLATEC="${CIVI_FILES}/templates_c"
 FACL_USERS="www-data $(whoami)"
 WPCLI="$WEB_ROOT/../bin/wp"
+MYSQLCLI="mysql"
 
-SITE_KEY=$(makepasswd --chars=16)
+SITE_KEY=$(cvutil_makepasswd 16)
 ADMIN_USER="admin"
-ADMIN_PASS=$(makepasswd --chars=12)
+ADMIN_PASS=$(cvutil_makepasswd 12)
+ADMIN_EMAIL="admin@example.com"
+DEMO_USER="demo"
+DEMO_PASS="demo"
+DEMO_EMAIL="demo@example.com"
 
-# Check if the CiviCRM directory looks OK
-if [ -z "$CIVI_ROOT" -o ! -d "$CIVI_ROOT/bin" ]; then
-  echo "Failed to locate civi root: $CIVI_ROOT"
-  exit 1
-fi
+###############################################################################
+## Main
+set -ex
 
-## Create database
-echo "DROP DATABASE IF EXISTS $DB_NAME" | mysql
-echo "CREATE DATABASE $DB_NAME" | mysql
-echo "GRANT ALL ON ${DB_NAME}.* TO '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}'" | mysql
-echo "GRANT SUPER ON *.* TO '${DB_USER}'@'localhost'" | mysql
+## Drop/create MySQL DB & user
+mysql_dropcreate
 
-## Create web site
-pushd "$WEB_ROOT"
-  [ -f "wp-config.php" ] && rm -f "wp-config.php"
-  $WPCLI core config \
-    --dbname="$DB_NAME" \
-    --dbuser="$DB_USER" \
-    --dbpass="$DB_PASS" \
-    --dbhost="$DB_HOST"
+## (Re)create CiviCRM config files, tables, and data dirs
+civicrm_install
 
-  $WPCLI core install \
-    --url="$SITE_URL" \
-    --admin_user="$ADMIN_USER" \
-    --admin_password="$ADMIN_PASS" \
-    --admin_email="${ADMIN_USER}@example.com" \
-    --title="CiviCRM-WordPress Demo"
+## (Re)Create WP config files, tables, and data dirs
+wp_install
 
-  ## Create WP-CiviCRM dirs and config
-  for SUBDIR in modules files files/civicrm files/civicrm/templates_c ; do
-    if [ ! -d "wp-content/plugins/${SUBDIR}" ]; then
-      mkdir "wp-content/plugins/${SUBDIR}"
-    fi
-  done
-
-  ## Allow shell and WWW users to both manipulate "files" directory
-  if which setfacl; then
-    for FACL_USER in $FACL_USERS ; do
-      find "$WEB_ROOT/wp-content/plugins/files" -type d | xargs setfacl -m u:${FACL_USER}:rwx -m d:u:${FACL_USER}:rwx
-    done
-  fi
-
+## Apply demo site customizations
+pushd "$WEB_ROOT" >> /dev/null
   ## Clear out default content. Load real content.
   $WPCLI post delete 1
   $WPCLI post delete 2
@@ -102,77 +105,7 @@ pushd "$WEB_ROOT"
   $WPCLI import ../app/config/civicrm-wordpress.xml --authors=create
   $WPCLI search-replace 'http://civicrm-wordpress.ex' "$SITE_URL"
   $WPCLI eval '$home = get_page_by_title("Welcome to CiviCRM with WordPress"); update_option("page_on_front", $home->ID); update_option("show_on_front", "page");'
-popd
 
-## Create CiviCRM config
-cat "$CIVI_ROOT/templates/CRM/common/civicrm.settings.php.template" \
-  | sed "s;%%baseURL%%;${SITE_URL};" \
-  | sed "s;%%cms%%;WordPress;" \
-  | sed "s;%%CMSdbHost%%;${DB_HOST};" \
-  | sed "s;%%CMSdbName%%;${DB_NAME};" \
-  | sed "s;%%CMSdbPass%%;${DB_PASS};" \
-  | sed "s;%%CMSdbUser%%;${DB_USER};" \
-  | sed "s;%%crmRoot%%;${CIVI_ROOT}/;" \
-  | sed "s;%%dbHost%%;${DB_HOST};" \
-  | sed "s;%%dbName%%;${DB_NAME};" \
-  | sed "s;%%dbPass%%;${DB_PASS};" \
-  | sed "s;%%dbUser%%;${DB_USER};" \
-  | sed "s;%%siteKey%%;${SITE_KEY};" \
-  | sed "s;%%templateCompileDir%%;${WEB_ROOT}/wp-content/plugins/files/civicrm/templates_c;" \
-  > "$CIVI_SETTINGS"
-
-echo  >> "$CIVI_SETTINGS"
-echo "define('CIVICRM_MAIL_LOG', '/dev/null');" >> "$CIVI_SETTINGS"
-
-cat > "$CIVI_ROOT/bin/setup.conf" << EOF
-  SVNROOT="$CIVI_ROOT"
-  CIVISOURCEDIR="$CIVI_ROOT"
-  SCHEMA=schema/Schema.xml
-  DBNAME="$DB_NAME"
-  DBUSER="$DB_USER"
-  DBPASS="$DB_PASS"
-  DBARGS=""
-  PHP5PATH=
-  DBLOAD="$DBLOAD"
-  # DBADD=
-  GENCODE_CMS=wordpress
-EOF
-
-## TODO: REVIEW
-cat > "$CIVI_ROOT/tests/phpunit/CiviTest/civicrm.settings.local.php" << EOF
-<?php
-define('CIVICRM_DSN', "mysql://${DB_USER}:${DB_PASS}@${DB_HOST}/${DB_NAME}");
-define('CIVICRM_TEMPLATE_COMPILEDIR', '${WEB_ROOT}/sites/${SITE_URL}/files/civicrm/templates_c');
-define('DONT_DOCUMENT_TEST_CONFIG', TRUE);
-EOF
-
-## TODO: REVIEW
-cat > "$CIVI_ROOT/tests/phpunit/CiviTest/CiviSeleniumSettings.php" << EOF
-<?php
-class CiviSeleniumSettings {
-	var \$publicSandbox  = false;
-	var \$browser = '*firefox';
-	var \$sandboxURL = '${SITE_URL}';
-	var \$sandboxPATH = '';
-	var \$username = 'demo';
-	var \$password = 'demo';
-	var \$adminUsername = '${ADMIN_USER}';
-	var \$adminPassword = '${ADMIN_PASS}';
-	var \$adminApiKey = 'apikey${ADMIN_PASS}';
-	var \$siteKey = '${SITE_KEY}';
-        var \$UFemail = 'noreply@civicrm.org';
-	function __construct() {
-		\$this->fullSandboxPath = \$this->sandboxURL . \$this->sandboxPATH;
-	}
-}
-
-EOF
-
-pushd "$CIVI_ROOT"
-  ./bin/setup.sh
-popd
-
-pushd "$WEB_ROOT"
   $WPCLI plugin activate civicrm
 
   $WPCLI role create civicrm_admin 'CiviCRM Administrator'
@@ -259,14 +192,9 @@ pushd "$WEB_ROOT"
     view_own_manual_batches \
     view_public_civimail_content
 
-  $WPCLI user create demo demo@example.com --role=civicrm_admin --user_pass=demo 
-popd
+  $WPCLI user create "$DEMO_USER" "$DEMO_EMAIL" --role=civicrm_admin --user_pass="$DEMO_PASS"
+popd >> /dev/null
 
+## Display summary
 set +x
-echo "========================================"
-echo "SUMMARY:"
-echo "  SITE_URL: $SITE_URL"
-echo "  DB_NAME: $DB_NAME"
-echo "  WEB_ROOT: $WEB_ROOT"
-echo "  ADMIN_USER: $ADMIN_USER"
-echo "  ADMIN_PASS: $ADMIN_PASS"
+cvutil_summary "New Site Summary"  SITE_URL DB_NAME WEB_ROOT CIVI_ROOT ADMIN_USER ADMIN_PASS DEMO_USER DEMO_PASS
